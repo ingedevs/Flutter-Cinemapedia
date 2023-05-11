@@ -9,8 +9,9 @@ typedef SearchMoviesCallback = Future<List<Movie>> Function(String query);
 
 class SearchMovieDelegate extends SearchDelegate<Movie?> {
   final SearchMoviesCallback searchMovies;
-  final List<Movie> initialMovies;
+  List<Movie> initialMovies;
   final debounceMovies = StreamController<List<Movie>>.broadcast();
+  final isLoadingString = StreamController<bool>.broadcast();
   Timer? _debounceTimer;
 
   SearchMovieDelegate({
@@ -23,10 +24,13 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
   }
 
   void _onQueryChange(String query) {
+    isLoadingString.sink.add(true);
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
       final movies = await searchMovies(query);
+      initialMovies = movies;
       debounceMovies.sink.add(movies);
+      isLoadingString.sink.add(false);
     });
   }
 
@@ -36,13 +40,30 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
   @override
   List<Widget>? buildActions(BuildContext context) {
     return [
-      FadeIn(
-        animate: query.isNotEmpty,
-        duration: const Duration(milliseconds: 200),
-        child: IconButton(
-          onPressed: () => query = '',
-          icon: const Icon(Icons.clear),
-        ),
+      StreamBuilder(
+        initialData: false,
+        stream: isLoadingString.stream,
+        builder: (context, snapshot) {
+          if (snapshot.data ?? false) {
+            return SpinPerfect(
+              duration: const Duration(seconds: 20),
+              spins: 10,
+              infinite: true,
+              animate: query.isNotEmpty,
+              child: const IconButton(
+                onPressed: null,
+                icon: Icon(Icons.refresh),
+              ),
+            );
+          }
+          return FadeIn(
+            animate: query.isNotEmpty,
+            child: IconButton(
+              onPressed: () => query = '',
+              icon: const Icon(Icons.clear),
+            ),
+          );
+        },
       ),
     ];
   }
@@ -60,12 +81,16 @@ class SearchMovieDelegate extends SearchDelegate<Movie?> {
 
   @override
   Widget buildResults(BuildContext context) {
-    return Container();
+    return _buildStreamBuilder();
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
     _onQueryChange(query);
+    return _buildStreamBuilder();
+  }
+
+  StreamBuilder<List<Movie>> _buildStreamBuilder() {
     return StreamBuilder(
       initialData: initialMovies,
       stream: debounceMovies.stream,
