@@ -1,4 +1,5 @@
 import 'package:fl_cinemapedia_app/domain/entities/movie.dart';
+import 'package:fl_cinemapedia_app/infrastructure/models/moviedb/movie_details.dart';
 import 'package:fl_cinemapedia_app/infrastructure/models/moviedb/movie_moviedb.dart';
 
 class MovieMapper {
@@ -22,6 +23,29 @@ class MovieMapper {
       video: movieDB.video,
       voteAverage: movieDB.voteAverage,
       voteCount: movieDB.voteCount,
+    );
+  }
+
+  static Movie movieDetailsToEntity(MovieDetails details) {
+    return Movie(
+      adult: details.adult,
+      backdropPath: details.backdropPath.isNotEmpty
+          ? 'https://image.tmdb.org/t/p/w500${details.backdropPath}'
+          : 'https://static.displate.com/857x1200/displate/2022-04-15/7422bfe15b3ea7b5933dffd896e9c7f9_46003a1b7353dc7b5a02949bd074432a.jpg',
+      genreIds: details.genres.map((e) => e.name.toString()).toList(),
+      id: details.id,
+      originalLanguage: details.originalLanguage,
+      originalTitle: details.originalTitle,
+      overview: details.overview.isEmpty ? 'Sin descripción' : details.overview,
+      popularity: details.popularity,
+      posterPath: details.posterPath.isNotEmpty
+          ? 'https://image.tmdb.org/t/p/w500${details.posterPath}'
+          : 'no-poster',
+      releaseDate: details.releaseDate,
+      title: details.title,
+      video: details.video,
+      voteAverage: details.voteAverage,
+      voteCount: details.voteCount,
     );
   }
 }
