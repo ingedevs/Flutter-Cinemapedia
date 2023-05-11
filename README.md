@@ -9,8 +9,9 @@
 ```
 flutter pub run build_runner build
 ```
-
-<div align="center">
+<hr/>
+<h3>Screenshots</h3>
+<div>
   <img src="screenshots/screenshot-1.png" width="250" />
   <img src="screenshots/screenshot-2.png" width="250" />
   <img src="screenshots/screenshot-3.png" width="250" />
