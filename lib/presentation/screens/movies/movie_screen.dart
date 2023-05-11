@@ -17,6 +17,7 @@ class MovieScreenState extends ConsumerState<MovieScreen> {
   void initState() {
     super.initState();
     ref.read(movieInfoProvider.notifier).loadMovie(widget.movieId);
+    ref.read(actorsByMovieProvider.notifier).loadActors(widget.movieId);
   }
 
   @override
@@ -94,8 +95,60 @@ class _MovieDetails extends StatelessWidget {
             ],
           ),
         ),
-        const Placeholder(),
+        _ActorsByMovie(movieId: '${movie.id}'),
+        const SizedBox(height: 50),
       ],
+    );
+  }
+}
+
+class _ActorsByMovie extends ConsumerWidget {
+  final String movieId;
+  const _ActorsByMovie({required this.movieId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final actors = ref.watch(actorsByMovieProvider)[movieId];
+
+    if (actors == null) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+
+    return SizedBox(
+      height: 300,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: actors.length,
+        itemBuilder: (context, index) {
+          final actor = actors[index];
+          return Container(
+            padding: const EdgeInsets.all(8),
+            width: 135,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.network(
+                    actor.profilePath,
+                    height: 180,
+                    width: 135,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(actor.name,
+                    maxLines: 2,
+                    style: Theme.of(context).textTheme.titleMedium),
+                Text(actor.character ?? '',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -112,12 +165,6 @@ class _CustomSliverAppBar extends StatelessWidget {
       foregroundColor: Colors.white,
       expandedHeight: size.height * 0.5,
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 20, bottom: 20),
-        title: Text(
-          movie.title,
-          textAlign: TextAlign.start,
-          style: const TextStyle(fontSize: 20),
-        ),
         background: Stack(
           children: [
             SizedBox.expand(
